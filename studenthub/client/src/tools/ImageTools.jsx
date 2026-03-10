@@ -162,10 +162,24 @@ function ImageCompressor({ logUsage }) {
   </div>);
 }
 
-function SimpleImageTool({ title, desc, logUsage }) {
-  const handleTry = () => { logUsage(title, 'Placeholder Interaction'); alert(`${title} is a premium AI feature. We are currently implementing the lite version.`); };
-  return (<div><div className="file-upload-zone" onClick={handleTry} style={{cursor:'pointer'}}><div className="file-upload-icon">🖼️</div><h3>{title}</h3><p>{desc}</p></div>
-    <p style={{textAlign:'center',color:'var(--text-muted)',marginTop:16,fontSize:13}}>💡 Click above to see status!</p></div>);
+function BackgroundRemover({ logUsage }) {
+  const [imgSrc, setImgSrc] = useState(null); const [result, setResult] = useState(null); const [threshold, setThreshold] = useState(200);
+  const handleFile = (e) => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (ev) => setImgSrc(ev.target.result); r.readAsDataURL(f); } };
+  const remove = () => {
+    const img = new Image(); img.onload = () => {
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0); const data = ctx.getImageData(0,0,c.width,c.height);
+      for(let i=0; i<data.data.length; i+=4) {
+        if(data.data[i] > threshold && data.data[i+1] > threshold && data.data[i+2] > threshold) data.data[i+3] = 0;
+      }
+      ctx.putImageData(data, 0, 0); setResult(c.toDataURL()); logUsage(`Threshold: ${threshold}`, 'Background Removed');
+    }; img.src = imgSrc;
+  };
+  return (<div><div className="file-upload-zone" onClick={() => document.getElementById('bg-in').click()}><div className="file-upload-icon">🎭</div><h3>{imgSrc ? 'Image Selected' : 'Select Image to Remove Background'}</h3><p>Works best for white backgrounds</p></div>
+    <input type="file" id="bg-in" accept="image/*" hidden onChange={handleFile}/>
+    {imgSrc && <><div className="input-group" style={{marginTop:16}}><label>Brightness Threshold: {threshold}</label><input type="range" min="100" max="250" value={threshold} onChange={e => setThreshold(e.target.value)}/></div>
+    <div className="tool-actions"><button className="btn btn-primary" onClick={remove}>Remove (Lite)</button></div></>}
+    {result && <div style={{marginTop:16}}><img src={result} style={{maxHeight:300,borderRadius:'var(--radius-md)',background:'url(https://www.transparenttextures.com/patterns/carbon-fibre.png)'}}/><br/><a href={result} download="no_bg.png" className="btn btn-secondary" style={{marginTop:8}}>Download PNG</a></div>}</div>);
 }
 
 function WatermarkTool({ logUsage }) {
@@ -232,7 +246,7 @@ export default function ImageTools({ toolId, logUsage }) {
     'watermark-tool': <WatermarkTool logUsage={logUsage}/>,
     'thumbnail-generator': <ThumbnailGen logUsage={logUsage}/>,
     'image-metadata': <ImageMeta logUsage={logUsage}/>,
-    'background-remover': <SimpleImageTool title="Background Remover" desc="Advanced AI Background removal (Coming in Pro)" logUsage={logUsage}/>
+    'background-remover': <BackgroundRemover logUsage={logUsage}/>
   };
   return map[toolId] || <p>Tool coming soon!</p>;
 }

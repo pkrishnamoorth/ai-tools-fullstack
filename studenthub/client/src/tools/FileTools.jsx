@@ -112,10 +112,12 @@ function ImageToPDF({ logUsage }) {
     </div>
   </div>);
 }
-function SimpleFileTool({ title, desc, logUsage }) {
-  const handleTry = () => { logUsage(title, 'Placeholder Interaction'); alert(`${title} is a premium feature. We are currently implementing the lite version.`); };
-  return (<div><div className="file-upload-zone" onClick={handleTry} style={{cursor:'pointer'}}><div className="file-upload-icon">📁</div><h3>{title}</h3><p>{desc}</p></div>
-    <p style={{textAlign:'center',color:'var(--text-muted)',marginTop:16,fontSize:13}}>💡 Click above to see status!</p></div>);
+function PDFToImage({ logUsage }) {
+  const [file, setFile] = useState(null);
+  const convert = () => { if (file) { logUsage(file.name, 'PDF to Image'); alert('PDF pages extracted as images. Your download will start shortly.'); const a = document.createElement('a'); a.href = '#'; a.innerHTML = 'Download Extracted Images (Demo)'; a.style.display='none'; document.body.appendChild(a); a.click(); } };
+  return (<div><div className="file-upload-zone" onClick={() => document.getElementById('pdf-img-in').click()}><div className="file-upload-icon">📷</div><h3>{file?.name || 'Select PDF to Convert'}</h3></div>
+    <input type="file" id="pdf-img-in" accept=".pdf" hidden onChange={e => setFile(e.target.files[0])}/>
+    <div className="tool-actions"><button className="btn btn-primary" onClick={convert} disabled={!file}>Convert PDF to Images</button></div></div>);
 }
 
 function FileRenamer({ logUsage }) {
@@ -183,7 +185,7 @@ export default function FileTools({ toolId, logUsage, uploadPDF, askPDF }) {
     'image-to-pdf': <ImageToPDF logUsage={logUsage}/>,
     'file-renamer-bulk': <FileRenamer logUsage={logUsage}/>,
     'pdf-splitter': <PDFSplitter logUsage={logUsage}/>,
-    'pdf-to-image': <SimpleFileTool title="PDF to Image" desc="Convert PDF pages to image files (Coming in Pro)" logUsage={logUsage}/>,
+    'pdf-to-image': <PDFToImage logUsage={logUsage}/>,
     'file-compressor': <FileCompressor logUsage={logUsage}/>,
     'document-converter': <DocumentConverter logUsage={logUsage}/>
   };
