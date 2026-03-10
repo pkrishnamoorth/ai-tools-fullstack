@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const dns = require('dns');
 require('dotenv').config();
+
+// Force DNS to use Google/Cloudflare (helps with SRV records on Windows)
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const authRoutes = require('./routes/auth');
 const toolRoutes = require('./routes/tools');
