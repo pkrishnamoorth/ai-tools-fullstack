@@ -3,11 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-const dns = require('dns');
 require('dotenv').config();
-
-// Force DNS to use Google/Cloudflare (helps with SRV records on Windows)
-dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const authRoutes = require('./routes/auth');
 const toolRoutes = require('./routes/tools');
@@ -78,22 +74,36 @@ mongoose.connect(process.env.MONGODB_URI, {
   socketTimeoutMS: 45000,
 })
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB Atlas');
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    console.log('Fallback: Starting server without MongoDB...');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} (Offline Mode)`);
+    console.error('❌ MongoDB Atlas connection failed:', err.message);
+    console.log('ℹ️  If using Atlas, ensure your current IP address is whitelisted in Network Access (0.0.0.0/0 for all IPs).');
+    console.log('🔄 Fallback: Connecting to Local MongoDB Database (mongodb://127.0.0.1:27017/studenthub)...');
+    
+    mongoose.connect('mongodb://127.0.0.1:27017/studenthub', {
+      serverSelectionTimeoutMS: 5000
+    })
+    .then(() => {
+      console.log('✅ Connected to Local MongoDB');
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT} (Local DB)`);
+      });
+    })
+    .catch((localErr) => {
+      console.error('❌ Local MongoDB connection also failed:', localErr.message);
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT} (Offline Mode)`);
+      });
     });
   });
 
 // Handle connection drops
 mongoose.connection.on('error', err => {
-  console.error('📡 MongoDB Connection Lost:', err.message);
+  console.error('📡 MongoDB Connection Error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
@@ -101,3 +111,4 @@ mongoose.connection.on('disconnected', () => {
 });
 
 module.exports = app;
+
