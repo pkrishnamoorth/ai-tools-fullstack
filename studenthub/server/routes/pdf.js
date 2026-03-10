@@ -44,11 +44,13 @@ router.post('/ask', auth, async (req, res) => {
     if (!aiKey || aiKey === 'your_groq_api_key_here') {
       return res.json({ answer: 'AI API key not configured. Set AI_API_KEY in .env' });
     }
-    const response = await fetch(process.env.AI_API_URL, {
+    const aiUrl = process.env.AI_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
+    const aiModel = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
+    const response = await fetch(aiUrl, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || 'llama-3.3-70b-versatile',
+        model: aiModel,
         messages: [
           { role: 'system', content: `You are a document analyzer. Answer questions based ONLY on this document:\n\n${pdfText.substring(0, 8000)}` },
           { role: 'user', content: question }

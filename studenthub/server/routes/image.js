@@ -37,11 +37,13 @@ router.post('/ask', auth, async (req, res) => {
     if (!aiKey || aiKey === 'your_groq_api_key_here') {
       return res.json({ answer: 'AI API key not configured.' });
     }
-    const response = await fetch(process.env.AI_API_URL, {
+    const aiUrl = process.env.AI_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
+    const aiModel = process.env.AI_MODEL || 'llama-3.3-70b-versatile';
+    const response = await fetch(aiUrl, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${aiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || 'llama-3.3-70b-versatile',
+        model: aiModel,
         messages: [
           { role: 'system', content: `Analyze this text extracted from an image and answer questions:\n\n${imageText}` },
           { role: 'user', content: question }
