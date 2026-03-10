@@ -6,6 +6,9 @@ const router = express.Router();
 
 // Signup
 router.post('/signup', async (req, res) => {
+  if (require('mongoose').connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database is currently offline. Please try again in 10 seconds.' });
+  }
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -26,12 +29,16 @@ router.post('/signup', async (req, res) => {
       user: { id: user._id, username: user.username, email: user.email, profileImage: user.profileImage, createdAt: user.createdAt }
     });
   } catch (err) {
+    console.error('Signup Error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 });
 
 // Login
 router.post('/login', async (req, res) => {
+  if (require('mongoose').connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database is currently offline. Please try again in 10 seconds.' });
+  }
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -53,6 +60,7 @@ router.post('/login', async (req, res) => {
       user: { id: user._id, username: user.username, email: user.email, profileImage: user.profileImage, createdAt: user.createdAt }
     });
   } catch (err) {
+    console.error('Login Error:', err);
     res.status(500).json({ error: 'Server error.' });
   }
 });

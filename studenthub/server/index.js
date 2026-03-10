@@ -72,7 +72,11 @@ app.get('/api/health', (req, res) => {
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGODB_URI)
+console.log('⏳ Connecting to MongoDB...');
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
   .then(() => {
     console.log('✅ Connected to MongoDB');
     app.listen(PORT, () => {
@@ -81,10 +85,19 @@ mongoose.connect(process.env.MONGODB_URI)
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err.message);
-    // Start server anyway for tools that don't need DB
+    console.log('Fallback: Starting server without MongoDB...');
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} (without MongoDB)`);
+      console.log(`🚀 Server running on port ${PORT} (Offline Mode)`);
     });
   });
+
+// Handle connection drops
+mongoose.connection.on('error', err => {
+  console.error('📡 MongoDB Connection Lost:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('🔌 MongoDB Disconnected');
+});
 
 module.exports = app;
